@@ -14,67 +14,119 @@ You may need to figure how to do that, copy this code in a notebook or something
 
 """
 
-from bs4 import BeautifulSoup
-import requests
-# import pandas as pd
+def isvalidguess(guess):
+  if len(guess) != 5:
+    return False
+  return True
 
-def checkforbadwords(lyrics):
-  # List of bad words
-  badwords = []
+def isvalidresult(result):
+  if len(result) != 5:
+    return False
+  for letter in result:
+    if letter != 'X' and letter != 'I' and letter != 'O':
+      return False
+  return True
 
-  # NOTE IF YOU WANT TO USE PANDAS, UNCOMMENT LINE 19, and 26-29, and comment out lines 32-38
-  # read from badwords.csv
-  # df = pd.read_csv('badwords.csv')
-  # for word in df.values:
-  #   badwords.append(word)
-
-  # read from badwords.txt
-  badwordsfile = open('badwords.txt', 'r')
-  while True:
-    badword = badwordsfile.readline()
-    if not badword:
-      break
-    badwords.append(badword.strip())
-  badwordsfile.close()
-
-  # Goes through lyrics and sees if it contains any bad words as defined by badwords.txt
-  for lyric in lyrics:
-    for badword in badwords:
-      if badword in lyric:
-        print('This song has a bad word. It is not safe for work.')
-        print('Bad word: ' + badword)
-        return
-  
-  print('This song is ok and safe for work :)')
-  return
+def help():
+  print("Welcome to Wordle Solver! What step do you need help with?")
+  print("For results, X denotes not in word, I denotes in word but wrong place, and O denotes letter in correct spot.")
 
 def main():
-  # Step 1: get artist and song title input. 
-  # The input needs to be formatted in a way that it'll fit in a genius.com URL address
-  # Basically you'll need what goes here: https://genius.com/{ARTIST}-{SONGTITLE}-lyrics
-  # Example: [Billie-eilish] and [bitches-broken-hearts] -> https://genius.com/Billie-eilish-bitches-broken-hearts-lyrics
-  artist = input("What is the author? (Only first letter capitalized): ")
-  songtitle = input("What is the song name? (all lower case, replace spaces with '-'): ")
+  # Using readlines()
+  all_words_file = open('all_words.txt', 'r')
+  words = all_words_file.readlines()
+  all_words_file.close
+
+  # Strips the newline character
+  for word in words:
+    word = word.strip()
 
   # Step 2: get web URL from input
-  baseURL = 'https://genius.com/'
-  URLSuffix = '-lyrics'
-  URL = baseURL + artist + '-' + songtitle + URLSuffix
-  print('URL to parse: ' + URL)
+  print("Welcome to Wordle Solver! First, please input your first guess")
+  guess = input("Guess a five letter word: ")
+  while not isvalidguess(guess):
+    if guess == "help":
+      help()
+    guess = input("Please guess a word with five letters: ")
 
-  # Step 3: 
-  # code from https://www.johnwmillr.com/scraping-genius-lyrics/
-  page = requests.get(URL)
-  htmlPage = BeautifulSoup(page.text, "html.parser")
+  print("Thanks. Now submit the results from the game.")
+  guess_result = input("Results (example 'XXIXO'): ")
+  while not isvalidresult(guess_result):
+    if guess_result == "help":
+      help()
+    guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
 
-  # Scrape the song lyrics from the HTML
-  lyrics = htmlPage.find("div", class_="lyrics").get_text()
+  # Time to start filtering and stuff
+  notinword = set()
+  inword = set()
+  knownletters = ['' for i in range(5)]
+  knownwrongplacements = [[] for i in range(5)]
 
-  print('Full song lyrics:')
-  print(lyrics)
-  lyricslist = lyrics.split()
+  while guess_result != "OOOOO":
+    potentiallynotinword = []
+    for i in range(5):
+      if guess_result[i] == "O":
+        inword.add(guess[i])
+        knownletters[i] = guess[i]
+      elif guess_result[i] == "I":
+        inword.add(guess[i])
+        knownwrongplacements[i].append(guess[i])
+      elif guess_result[i] == "X":
+        potentiallynotinword.append(guess[i])
+    
+    for letter in potentiallynotinword:
+      if letter not in inword:
+        notinword.add(letter)
 
-  checkforbadwords(lyricslist)
+    # FILTER ON MAIN LIST
+    prevvalidwordscount = len(words)
+
+    print("not in word: " + str(notinword))
+    print("in word: " + str(inword))
+    print("known letters: " + str(knownletters))
+    print("known wrong placements: " + str(knownwrongplacements))
+
+    # filter first on correct letter position words
+    for i in range(len(knownletters)):
+      if knownletters[i] != '':
+        words = [word for word in words if word[i] == knownletters[i]]
+
+    # then filter on having correct letters
+    for letter in inword:
+      words = [word for word in words if letter in word]
+
+    # then filter on not having incorrect letters
+    for letter in notinword:
+      words = [word for word in words if letter not in word]
+
+    # then filter on not having right letters in wrong placements
+    for i in range(len(knownwrongplacements)):
+      if knownwrongplacements[i]:
+        for wrongplacement in knownwrongplacements[i]:
+          words = [word for word in words if word[i] != wrongplacement]
+    
+    newvalidwordscount = len(words)
+    print("Number of possible words reduced from " + str(prevvalidwordscount) + " down to " + str(newvalidwordscount) + ".")
+
+    someremainingwords = []
+    for i in range(min(newvalidwordscount, 12)):
+      someremainingwords.append(words[i].strip())
+    print("Some of the valid words remaining: " + str(someremainingwords))
+
+    guess = input("Guess another word: ")
+    while not isvalidguess(guess):
+      if guess == "help":
+        help()
+      guess = input("Please guess a word with five letters: ")
+
+    print("Thanks. Now submit the results from the game.")
+    guess_result = input("Results (example 'XXIXO'): ")
+    while not isvalidresult(guess_result):
+      if guess_result == "help":
+        help()
+      guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
+  
+  print("Congrats! The word is " + guess)
 
 
 if __name__ == '__main__':
