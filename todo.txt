@@ -1,0 +1,10 @@
+Things to implement/do:
+
+1. Test cases
+2. Buff up README
+3. Dedicated HELP screens (type h to show)
+4. Button options for various things (h for help, f to finish, r to reset, d to debug mode)
+5. Optimize returned list of words to better prune results faster
+5.a. prioritize words with only 1 of each letter
+5.b. prioritize words with letters of higher frequencies. (TF/IDF)?
+6. Clean up code more with helper methods etc

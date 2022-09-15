@@ -31,6 +31,23 @@ def help():
   print("Welcome to Wordle Solver! What step do you need help with?")
   print("For results, X denotes not in word, I denotes in word but wrong place, and O denotes letter in correct spot.")
 
+def takeguess():
+  guess = input("Guess a five letter word: ")
+  while not isvalidguess(guess):
+    if guess == "help":
+      help()
+    guess = input("Please guess a word with five letters: ")
+
+  return guess
+
+def submitresults():
+  guess_result = input("Results: ")
+  while not isvalidresult(guess_result):
+    if guess_result == "help":
+      help()
+    guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
+  return guess_result
+
 def main():
   # Using readlines()
   all_words_file = open('all_words.txt', 'r')
@@ -43,18 +60,10 @@ def main():
 
   # Step 2: get web URL from input
   print("Welcome to Wordle Solver! First, please input your first guess")
-  guess = input("Guess a five letter word: ")
-  while not isvalidguess(guess):
-    if guess == "help":
-      help()
-    guess = input("Please guess a word with five letters: ")
+  guess = takeguess()
 
   print("Thanks. Now submit the results from the game.")
-  guess_result = input("Results (example 'XXIXO'): ")
-  while not isvalidresult(guess_result):
-    if guess_result == "help":
-      help()
-    guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
+  guess_result = submitresults()
 
   # Time to start filtering and stuff
   notinword = set()
@@ -81,10 +90,10 @@ def main():
     # FILTER ON MAIN LIST
     prevvalidwordscount = len(words)
 
-    print("not in word: " + str(notinword))
-    print("in word: " + str(inword))
-    print("known letters: " + str(knownletters))
-    print("known wrong placements: " + str(knownwrongplacements))
+    # print("not in word: " + str(notinword))
+    # print("in word: " + str(inword))
+    # print("known letters: " + str(knownletters))
+    # print("known wrong placements: " + str(knownwrongplacements))
 
     # filter first on correct letter position words
     for i in range(len(knownletters)):
@@ -111,24 +120,15 @@ def main():
     someremainingwords = []
     for i in range(min(newvalidwordscount, 12)):
       someremainingwords.append(words[i].strip())
-    print("Some of the valid words remaining: " + str(someremainingwords))
+    print("Some of the valid words remaining: " + str(someremainingwords) + "\n")
 
-    guess = input("Guess another word: ")
-    while not isvalidguess(guess):
-      if guess == "help":
-        help()
-      guess = input("Please guess a word with five letters: ")
+    guess = takeguess()
 
     print("Thanks. Now submit the results from the game.")
-    guess_result = input("Results (example 'XXIXO'): ")
-    while not isvalidresult(guess_result):
-      if guess_result == "help":
-        help()
-      guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
+    guess_result = submitresults()
   
   print("Congrats! The word is " + guess)
 
 
 if __name__ == '__main__':
-  # CODE STARTS HERE AND EXECUTES main()
   main()
