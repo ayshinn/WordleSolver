@@ -44,16 +44,20 @@ def submitresults():
     guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
   return guess_result
 
-def showbestremainingwords(words):
+def showbestremainingwords(words, knownletters):
   if len(words) < 20:
-    print(words)
+    print("Some of the valid words remaining: " + str(words) + "\n")
     return
 
   # TODO optimize this function to take in known letter positions and only optimize for missing letter spots
   letterfrequencydict = {}
   for word in words:
     word = word.strip()
-    for letter in word:
+    for i in range(len(word)):
+      if knownletters[i] != "":
+        # we only care to optimize for letter frequencies on parts of the word that is yet to be solved.
+        continue
+      letter = word[i]
       if letter in letterfrequencydict:
         letterfrequencydict[letter] += 1
       else:
@@ -62,12 +66,20 @@ def showbestremainingwords(words):
   remainingwordswithscores = []
   for word in words:
     word = word.strip()
-    uniquelettersinword = set(word)    
+    alreadyusedletters = set()
     score = 0
 
-    for letter in uniquelettersinword:
-      score += letterfrequencydict[letter]
+    # Get the "score" of the word based on how frequently its letters are used in remaining valid words
+    for i in range(len(word)):
+      letter = word[i]
+      if knownletters[i] != "" or letter in alreadyusedletters:
+        # we only care to optimize for letter frequencies on parts of the word that is yet to be solved and is unique.
+        continue
+      else:
+        alreadyusedletters.add(letter)
+        score += letterfrequencydict[letter]
 
+    # Fetch the 20 most valuable words to use to print to the user
     if len(remainingwordswithscores) < 20:
       remainingwordswithscores.append([word, score])
     else:
@@ -142,7 +154,7 @@ def main():
     newvalidwordscount = len(words)
     print("Number of possible words reduced from " + str(prevvalidwordscount) + " down to " + str(newvalidwordscount) + ".")
 
-    showbestremainingwords(words)
+    showbestremainingwords(words, knownletters)
 
     guess = takeguess()
     guess_result = submitresults()
