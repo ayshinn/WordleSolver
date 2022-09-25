@@ -4,7 +4,6 @@ Things to implement/do:
 2. Buff up README
 3. Dedicated HELP screens (type h to show)
 4. Button options for various things (h for help, f to finish, r to reset, d to debug mode)
-5. Optimize returned list of words to better prune results faster
-5.a. prioritize words with only 1 of each letter
-5.b. prioritize words with letters of higher frequencies. (TF/IDF)?
-6. Clean up code more with helper methods etc
+5. Clean up code more with helper methods etc
+6. If 2 yellows show up for a letter, or a green and yellow for same letter, then there's 2 of that letter.
+  Example: guess: belie. result: XIXXI. two e's in the final word.

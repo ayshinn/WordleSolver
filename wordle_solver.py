@@ -16,7 +16,7 @@ def isvalidguess(guess):
   return True
 
 def isvalidresult(result):
-  if len(result) != 5:
+  if len(result) != 5 and result != "O" and result != "X":
     return False
   for letter in result:
     if letter != 'X' and letter != 'I' and letter != 'O':
@@ -26,6 +26,18 @@ def isvalidresult(result):
 def help():
   print("Welcome to Wordle Solver! What step do you need help with?")
   print("For results, X denotes not in word, I denotes in word but wrong place, and O denotes letter in correct spot.")
+  print("For 5 words that gives 25 unique letters: fjord chunk vibex gymps waltz")
+
+def choosegamemode():
+  print("What version of Wordle are you playing today?")
+  print("[1] Wordle\n[2] Duordle\n[4] Quordle\n[8] Octordle")
+  mode = int(input("Game mode: "))
+  while mode != 1 and mode != 2 and mode != 4 and mode != 8:
+    if mode == "help" or mode == "h":
+      help()
+    mode = input("Please select a valid game mode: ")
+
+  return mode
 
 def takeguess():
   guess = input("Guess a five letter word: ")
@@ -36,59 +48,76 @@ def takeguess():
 
   return guess
 
-def submitresults():
-  guess_result = input("Results: ")
-  while not isvalidresult(guess_result):
-    if guess_result == "help" or guess_result == "h":
-      help()
-    guess_result = input("Results should only be made up of X/I/O and be 5 characters long: ")
-  return guess_result
+def submitresults(mode, foundwords):
+  results = []
+  for i in range(mode):
+    if foundwords[i] == True:
+      results.append("OOOOO")
+      continue
+    result = input("Results for Game " + str(i + 1) + ": ")
+    while not isvalidresult(result):
+      if result == "help" or result == "h":
+        help()
+      result = input("Results should only be made up of X/I/O and be 5 characters long: ")
 
-def showbestremainingwords(words, knownletters):
-  if len(words) < 20:
-    print("Some of the valid words remaining: " + str(words) + "\n")
-    return
+    if result == "O":
+      result = "OOOOO"
+    elif result == "X":
+      result = "XXXXX"
+    results.append(result)
+  return results
 
-  # TODO optimize this function to take in known letter positions and only optimize for missing letter spots
-  letterfrequencydict = {}
-  for word in words:
-    word = word.strip()
-    for i in range(len(word)):
-      if knownletters[i] != "":
-        # we only care to optimize for letter frequencies on parts of the word that is yet to be solved.
-        continue
-      letter = word[i]
-      if letter in letterfrequencydict:
-        letterfrequencydict[letter] += 1
-      else:
-        letterfrequencydict[letter] = 1
+def showbestremainingwords(mode, words, foundwords, knownletters):
+  for k in range(mode):
+    if foundwords[k]:
+      print("Game " + str(k + 1) + " words remaining: " + str(words[k]) + " COMPLETE")
+      continue
 
-  remainingwordswithscores = []
-  for word in words:
-    word = word.strip()
-    alreadyusedletters = set()
-    score = 0
+    words[k] = [word.strip() for word in words[k]]
+    if len(words[k]) < 15:
+      print("Game " + str(k + 1) + " words remaining: " + str(words[k]))
+      continue
 
-    # Get the "score" of the word based on how frequently its letters are used in remaining valid words
-    for i in range(len(word)):
-      letter = word[i]
-      if knownletters[i] != "" or letter in alreadyusedletters:
-        # we only care to optimize for letter frequencies on parts of the word that is yet to be solved and is unique.
-        continue
-      else:
-        alreadyusedletters.add(letter)
-        score += letterfrequencydict[letter]
+    letterfrequencydict = {}
+    for word in words[k]:
+      word = word.strip()
+      for i in range(len(word)):
+        if knownletters[k][i] != "":
+          # we only care to optimize for letter frequencies on parts of the word that is yet to be solved.
+          continue
+        letter = word[i]
+        if letter in letterfrequencydict:
+          letterfrequencydict[letter] += 1
+        else:
+          letterfrequencydict[letter] = 1
 
-    # Fetch the 20 most valuable words to use to print to the user
-    if len(remainingwordswithscores) < 20:
-      remainingwordswithscores.append([word, score])
-    else:
-      remainingwordswithscores.sort(key = lambda x: x[1], reverse = True)
-      if score > remainingwordswithscores[-1][1]:
-        remainingwordswithscores.pop()
+    remainingwordswithscores = []
+    for word in words[k]:
+      word = word.strip()
+      alreadyusedletters = set()
+      score = 0
+
+      # Get the "score" of the word based on how frequently its letters are used in remaining valid words
+      for i in range(len(word)):
+        letter = word[i]
+        if knownletters[k][i] != "" or letter in alreadyusedletters:
+          # we only care to optimize for letter frequencies on parts of the word that is yet to be solved and is unique.
+          continue
+        else:
+          alreadyusedletters.add(letter)
+          score += letterfrequencydict[letter]
+
+      # Fetch the 20 most valuable words to use to print to the user
+      if len(remainingwordswithscores) < 14:
         remainingwordswithscores.append([word, score])
+      else:
+        remainingwordswithscores.sort(key = lambda x: x[1], reverse = True)
+        if score > remainingwordswithscores[-1][1]:
+          remainingwordswithscores.pop()
+          remainingwordswithscores.append([word, score])
 
-  print("Some of the valid words remaining: " + str(remainingwordswithscores) + "\n")
+    print("Game " + str(k + 1) + " words remaining: " + str(remainingwordswithscores))
+  print("\n")
   return
 
 def main():
@@ -102,64 +131,83 @@ def main():
     word = word.strip()
 
   # Prompts the user for their guess and the corresponding result
-  print("Welcome to Wordle Solver! First, please input your first guess")
-  guess = takeguess()
-  print("Thanks. Now submit the results from the game.")
-  guess_result = submitresults()
+  print("Welcome to Wordle Solver!")
+  mode = choosegamemode()
 
-  notinword = set()
-  inword = set()
-  knownletters = ['' for i in range(5)]
-  knownwrongplacements = [[] for i in range(5)]
+  remainingwords = [words.copy() for _ in range(mode)]
+  notinword = [set() for _ in range(mode)]
+  inword = [set() for _ in range(mode)]
+  knownletters = [['' for _ in range(5)] for _ in range(mode)]
+  knownwrongplacements = [[[] for _ in range(5)] for _ in range(mode)]
 
-  while guess_result != "OOOOO":
-    # Gather information based on results on letter placement, and if each letter is in the word or not
-    potentiallynotinword = []
-    for i in range(5):
-      if guess_result[i] == "O":
-        inword.add(guess[i])
-        knownletters[i] = guess[i]
-      elif guess_result[i] == "I":
-        inword.add(guess[i])
-        knownwrongplacements[i].append(guess[i])
-      elif guess_result[i] == "X":
-        potentiallynotinword.append(guess[i])
-    
-    for letter in potentiallynotinword:
-      if letter not in inword:
-        notinword.add(letter)
+  originalnumwords = len(words)
+  validwordscount = [originalnumwords for _ in range(mode)]
+  foundwords = [False for _ in range(mode)]
 
-    prevvalidwordscount = len(words)
+  numturns = 0
 
-    # Filters down the list of words that can possibly remain to guess.
-    # filter first on correct letter position words
-    for i in range(len(knownletters)):
-      if knownletters[i] != '':
-        words = [word for word in words if word[i] == knownletters[i]]
+  while foundwords.count(True) < mode:
+    tempvalidwordscount = [0 for _ in range(mode)]
 
-    # then filter on having correct letters
-    for letter in inword:
-      words = [word for word in words if letter in word]
-
-    # then filter on not having incorrect letters
-    for letter in notinword:
-      words = [word for word in words if letter not in word]
-
-    # then filter on not having right letters in wrong placements
-    for i in range(len(knownwrongplacements)):
-      if knownwrongplacements[i]:
-        for wrongplacement in knownwrongplacements[i]:
-          words = [word for word in words if word[i] != wrongplacement]
-    
-    newvalidwordscount = len(words)
-    print("Number of possible words reduced from " + str(prevvalidwordscount) + " down to " + str(newvalidwordscount) + ".")
-
-    showbestremainingwords(words, knownletters)
-
+    # Have user take guess, and record results
     guess = takeguess()
-    guess_result = submitresults()
-  
-  print("Congrats! The word is " + guess)
+    guess_results = submitresults(mode, foundwords)
+    numturns += 1
+    for i in range(mode):
+      if foundwords[i]:
+        continue
+
+      guess_result = guess_results[i]
+      if guess_result == "OOOOO":
+        foundwords[i] = True
+        if guess in remainingwords[i]:
+          remainingwords[i] = [guess]
+        continue
+
+      # Gather information based on results on letter placement, and if each letter is in the word or not
+      potentiallynotinword = []
+      for j in range(5):
+        if guess_result[j] == "O":
+          inword[i].add(guess[j])
+          knownletters[i][j] = guess[j]
+        elif guess_result[j] == "I":
+          inword[i].add(guess[j])
+          knownwrongplacements[i][j].append(guess[j])
+        elif guess_result[j] == "X":
+          potentiallynotinword.append(guess[j])
+
+      for letter in potentiallynotinword:
+        if letter not in inword[i]:
+          notinword[i].add(letter)
+
+      tempvalidwordscount[i] = len(remainingwords[i])
+
+      # Filters down the list of words that can possibly remain to guess.
+      # filter first on correct letter position words
+      for j in range(len(knownletters[i])):
+        if knownletters[i][j] != '':
+          remainingwords[i] = [word for word in remainingwords[i] if word[j] == knownletters[i][j]]
+
+      # then filter on having correct letters
+      for letter in inword[i]:
+        remainingwords[i] = [word for word in remainingwords[i] if letter in word]
+
+      # then filter on not having incorrect letters
+      for letter in notinword[i]:
+        remainingwords[i] = [word for word in remainingwords[i] if letter not in word]
+
+      # then filter on not having right letters in wrong placements
+      for j in range(len(knownwrongplacements[i])):
+        if knownwrongplacements[i][j]:
+          for wrongplacement in knownwrongplacements[i][j]:
+            remainingwords[i] = [word for word in remainingwords[i] if word[j] != wrongplacement]
+
+    print("Number of possible words reduced from " + str(validwordscount) + " down to " + str(tempvalidwordscount) + ".")
+    validwordscount = tempvalidwordscount
+
+    showbestremainingwords(mode, remainingwords, foundwords, knownletters)
+
+  print("Congrats! You've won in " + str(numturns) + " turns.")
 
 
 if __name__ == '__main__':
