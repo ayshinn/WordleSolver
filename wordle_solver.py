@@ -120,6 +120,27 @@ def showbestremainingwords(mode, words, foundwords, knownletters):
   print("\n")
   return
 
+def filterwords(words, knownletters, knownwrongplacements, inword, notinword):
+  for j in range(len(knownletters)):
+    if knownletters[j] != '':
+      words = [word for word in words if word[j] == knownletters[j]]
+
+  # then filter on having correct letters
+  for letter in inword:
+    words = [word for word in words if letter in word]
+
+  # then filter on not having incorrect letters
+  for letter in notinword:
+    words = [word for word in words if letter not in word]
+
+  # then filter on not having right letters in wrong placements
+  for j in range(len(knownwrongplacements)):
+    if knownwrongplacements[j]:
+      for wrongplacement in knownwrongplacements[j]:
+        words = [word for word in words if word[j] != wrongplacement]
+
+  return words
+
 def main():
   # Reads in the list of 5 letter words available to us.
   all_words_file = open('all_words.txt', 'r')
@@ -184,23 +205,7 @@ def main():
 
       # Filters down the list of words that can possibly remain to guess.
       # filter first on correct letter position words
-      for j in range(len(knownletters[i])):
-        if knownletters[i][j] != '':
-          remainingwords[i] = [word for word in remainingwords[i] if word[j] == knownletters[i][j]]
-
-      # then filter on having correct letters
-      for letter in inword[i]:
-        remainingwords[i] = [word for word in remainingwords[i] if letter in word]
-
-      # then filter on not having incorrect letters
-      for letter in notinword[i]:
-        remainingwords[i] = [word for word in remainingwords[i] if letter not in word]
-
-      # then filter on not having right letters in wrong placements
-      for j in range(len(knownwrongplacements[i])):
-        if knownwrongplacements[i][j]:
-          for wrongplacement in knownwrongplacements[i][j]:
-            remainingwords[i] = [word for word in remainingwords[i] if word[j] != wrongplacement]
+      remainingwords[i] = filterwords(remainingwords[i], knownletters[i], knownwrongplacements[i], inword[i], notinword[i])
 
     print("Number of possible words reduced from " + str(validwordscount) + " down to " + str(tempvalidwordscount) + ".")
     validwordscount = tempvalidwordscount

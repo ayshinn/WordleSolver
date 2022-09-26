@@ -7,3 +7,5 @@ Things to implement/do:
 5. Clean up code more with helper methods etc
 6. If 2 yellows show up for a letter, or a green and yellow for same letter, then there's 2 of that letter.
   Example: guess: belie. result: XIXXI. two e's in the final word.
+7. Make data structure class for all the game mode tracking data.
+8. Fix word count changes that get printed
