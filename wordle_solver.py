@@ -10,6 +10,8 @@ and
 For help, type "h" or "help" at any point.
 """
 
+from collections import defaultdict
+
 def isvalidguess(guess):
   if len(guess) != 5:
     return False
@@ -120,7 +122,7 @@ def showbestremainingwords(mode, words, foundwords, knownletters):
   print("\n")
   return
 
-def filterwords(words, knownletters, knownwrongplacements, inword, notinword):
+def filterwords(words, knownletters, knownwrongplacements, inword, notinword, multiletters):
   for j in range(len(knownletters)):
     if knownletters[j] != '':
       words = [word for word in words if word[j] == knownletters[j]]
@@ -138,6 +140,10 @@ def filterwords(words, knownletters, knownwrongplacements, inword, notinword):
     if knownwrongplacements[j]:
       for wrongplacement in knownwrongplacements[j]:
         words = [word for word in words if word[j] != wrongplacement]
+
+  # then, if a letter is known to appear at least twice but isn't mapped yet, then filter
+  for key, value in multiletters.items():
+    words = [word for word in words if word.count(key) >= value]
 
   return words
 
@@ -187,15 +193,28 @@ def main():
 
       # Gather information based on results on letter placement, and if each letter is in the word or not
       potentiallynotinword = []
+
+      guessletterfreq = defaultdict(int)
+      yellowletters = set()
       for j in range(5):
-        if guess_result[j] == "O":
-          inword[i].add(guess[j])
-          knownletters[i][j] = guess[j]
-        elif guess_result[j] == "I":
-          inword[i].add(guess[j])
-          knownwrongplacements[i][j].append(guess[j])
-        elif guess_result[j] == "X":
-          potentiallynotinword.append(guess[j])
+        letter = guess[j]
+        if guess_result[j] == "X":
+          potentiallynotinword.append(letter)
+        else:
+          inword[i].add(letter)
+          guessletterfreq[letter] += 1
+          if guess_result[j] == "I":
+            knownwrongplacements[i][j].append(letter)
+            yellowletters.add(letter)
+          elif guess_result[j] == "O":
+            knownletters[i][j] = letter
+
+      # get any letter that shows up at least twice but with at least one yellow
+      multiletters = {}
+      for key, value in guessletterfreq.items():
+        if value >= 2 and key in yellowletters:
+          multiletters[key] = value
+
 
       for letter in potentiallynotinword:
         if letter not in inword[i]:
@@ -205,7 +224,7 @@ def main():
 
       # Filters down the list of words that can possibly remain to guess.
       # filter first on correct letter position words
-      remainingwords[i] = filterwords(remainingwords[i], knownletters[i], knownwrongplacements[i], inword[i], notinword[i])
+      remainingwords[i] = filterwords(remainingwords[i], knownletters[i], knownwrongplacements[i], inword[i], notinword[i], multiletters)
 
     print("Number of possible words reduced from " + str(validwordscount) + " down to " + str(tempvalidwordscount) + ".")
     validwordscount = tempvalidwordscount
