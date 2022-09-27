@@ -33,13 +33,13 @@ def help():
 def choosegamemode():
   print("What version of Wordle are you playing today?")
   print("[1] Wordle\n[2] Duordle\n[4] Quordle\n[8] Octordle")
-  mode = int(input("Game mode: "))
-  while mode != 1 and mode != 2 and mode != 4 and mode != 8:
+  mode = input("Game mode: ")
+  while mode != "1" and mode != "2" and mode != "4" and mode != "8":
     if mode == "help" or mode == "h":
       help()
     mode = input("Please select a valid game mode: ")
 
-  return mode
+  return int(mode)
 
 def takeguess():
   guess = input("Guess a five letter word: ")
