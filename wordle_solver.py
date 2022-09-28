@@ -220,11 +220,11 @@ def main():
         if letter not in inword[i]:
           notinword[i].add(letter)
 
-      tempvalidwordscount[i] = len(remainingwords[i])
-
       # Filters down the list of words that can possibly remain to guess.
       # filter first on correct letter position words
       remainingwords[i] = filterwords(remainingwords[i], knownletters[i], knownwrongplacements[i], inword[i], notinword[i], multiletters)
+
+      tempvalidwordscount[i] = len(remainingwords[i])
 
     print("Number of possible words reduced from " + str(validwordscount) + " down to " + str(tempvalidwordscount) + ".")
     validwordscount = tempvalidwordscount
