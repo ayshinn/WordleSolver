@@ -30,56 +30,67 @@ def isvalidresult(result):
       return False
   return True
 
-def showbestremainingwords(mode, words, foundwords, knownletters):
-  for k in range(mode):
-    if foundwords[k]:
-      print("Game " + str(k + 1) + " words remaining: " + str(words[k]) + " COMPLETE")
-      continue
+def calculateremainingwordswithscores(words, knownletters, letterfreqdict):
+  remainingwordswithscores = []
+  for word in words:
+    alreadyusedletters = set()
+    score = 0
 
-    words[k] = [word.strip() for word in words[k]]
-    if len(words[k]) < 13:
-      print("Game " + str(k + 1) + " words remaining: " + str(words[k]))
-      continue
-
-    letterfrequencydict = {}
-    for word in words[k]:
-      word = word.strip()
-      for i in range(len(word)):
-        if knownletters[k][i] != "":
-          # we only care to optimize for letter frequencies on parts of the word that is yet to be solved.
-          continue
-        letter = word[i]
-        if letter in letterfrequencydict:
-          letterfrequencydict[letter] += 1
-        else:
-          letterfrequencydict[letter] = 1
-
-    remainingwordswithscores = []
-    for word in words[k]:
-      word = word.strip()
-      alreadyusedletters = set()
-      score = 0
-
-      # Get the "score" of the word based on how frequently its letters are used in remaining valid words
-      for i in range(len(word)):
-        letter = word[i]
-        if knownletters[k][i] != "" or letter in alreadyusedletters:
-          # we only care to optimize for letter frequencies on parts of the word that is yet to be solved and is unique.
-          continue
-        else:
-          alreadyusedletters.add(letter)
-          score += letterfrequencydict[letter]
-
-      # Fetch the 12 most valuable words to use to print to the user
-      if len(remainingwordswithscores) < 12:
-        remainingwordswithscores.append([word, score])
+    # Get the "score" of the word based on how frequently its letters are used in remaining valid words
+    for i in range(len(word)):
+      letter = word[i]
+      if knownletters[i] != "" or letter in alreadyusedletters:
+        # we only care to optimize for letter frequencies on parts of the word that is yet to be solved and is unique.
+        continue
       else:
-        remainingwordswithscores.sort(key = lambda x: x[1], reverse = True)
-        if score > remainingwordswithscores[-1][1]:
-          remainingwordswithscores.pop()
-          remainingwordswithscores.append([word, score])
+        alreadyusedletters.add(letter)
+        score += letterfreqdict[letter]
 
-    print("Game " + str(k + 1) + " words remaining: " + str(remainingwordswithscores))
+    # Fetch the 12 most valuable words to use to print to the user
+    if len(remainingwordswithscores) < 12:
+      remainingwordswithscores.append([word, score])
+    else:
+      remainingwordswithscores.sort(key = lambda x: x[1], reverse = True)
+      if score > remainingwordswithscores[-1][1]:
+        remainingwordswithscores.pop()
+        remainingwordswithscores.append([word, score])
+  return remainingwordswithscores
+
+def calculateletterfrequency(words, knownletters):
+  letterfrequencydict = defaultdict(int)
+  for word in words:
+    for i in range(len(word)):
+      if knownletters[i] != "":
+        # we only care to optimize for letter frequencies on parts of the word that is yet to be solved.
+        continue
+      letterfrequencydict[word[i]] += 1
+  return letterfrequencydict
+
+def showbestremainingwords(mode, words, foundwords, knownletters, unusedletterswords):
+  for k in range(mode):
+    resulttextprefix = "Game " + str(k + 1) + " words remaining: "
+    words[k] = [word.strip() for word in words[k]]
+
+    if foundwords[k]:
+      print(resulttextprefix + str(words[k]) + " COMPLETE")
+      continue
+
+    if len(words[k]) < 13:
+      print(resulttextprefix + str(words[k]))
+      continue
+
+    # WANT
+    letterfrequencydict = calculateletterfrequency(words[k], knownletters[k])
+    remainingwordswithscores = calculateremainingwordswithscores(words[k], knownletters[k], letterfrequencydict)
+
+    print(resulttextprefix + str(remainingwordswithscores))
+  # unusedletterswords
+  if unusedletterswords and mode > 1:
+    # calculate letterfreqdict for scoring letters
+    letterfrequencydict = calculateletterfrequency(unusedletterswords, ['' for _ in range(5)])
+    remainingwordswithscores = calculateremainingwordswithscores(unusedletterswords, ['' for _ in range(5)], letterfrequencydict)
+
+    print("Words without any used letters so far: " + str(remainingwordswithscores))
   print("\n")
   return
 
@@ -144,6 +155,8 @@ def playgame(words, mode):
   knownletters = [['' for _ in range(5)] for _ in range(mode)]
   knownwrongplacements = [[[] for _ in range(5)] for _ in range(mode)]
 
+  unusedletterswords = words.copy()
+
   originalnumwords = len(words)
   validwordscount = [originalnumwords for _ in range(mode)]
   foundwords = [False for _ in range(mode)]
@@ -175,6 +188,7 @@ def playgame(words, mode):
       yellowletters = set()
       for j in range(5):
         letter = guess[j]
+        unusedletterswords = [word.strip() for word in unusedletterswords if letter not in word]
         if guess_result[j] == "X":
           potentiallynotinword.append(letter)
         else:
@@ -204,7 +218,7 @@ def playgame(words, mode):
     print("Number of possible words reduced from " + str(validwordscount) + " down to " + str(tempvalidwordscount) + ".")
     validwordscount = tempvalidwordscount
 
-    showbestremainingwords(mode, remainingwords, foundwords, knownletters)
+    showbestremainingwords(mode, remainingwords, foundwords, knownletters, unusedletterswords)
 
   print("Congrats! You've won in " + str(numturns) + " turns.")
 
