@@ -12,6 +12,11 @@ For help, type "h" or "help" at any point.
 
 from collections import defaultdict
 
+def help():
+  print("Welcome to Wordle Solver! What step do you need help with?")
+  print("For results, X denotes not in word, I denotes in word but wrong place, and O denotes letter in correct spot.")
+  print("For 5 words that gives 25 unique letters: fjord chunk vibex gymps waltz")
+
 def isvalidguess(guess):
   if len(guess) != 5:
     return False
@@ -25,50 +30,6 @@ def isvalidresult(result):
       return False
   return True
 
-def help():
-  print("Welcome to Wordle Solver! What step do you need help with?")
-  print("For results, X denotes not in word, I denotes in word but wrong place, and O denotes letter in correct spot.")
-  print("For 5 words that gives 25 unique letters: fjord chunk vibex gymps waltz")
-
-def choosegamemode():
-  print("What version of Wordle are you playing today?")
-  print("[1] Wordle\n[2] Duordle\n[4] Quordle\n[8] Octordle")
-  mode = input("Game mode: ")
-  while mode != "1" and mode != "2" and mode != "4" and mode != "8":
-    if mode == "help" or mode == "h":
-      help()
-    mode = input("Please select a valid game mode: ")
-
-  return int(mode)
-
-def takeguess():
-  guess = input("Guess a five letter word: ")
-  while not isvalidguess(guess):
-    if guess == "help" or guess == "h":
-      help()
-    guess = input("Please guess a word with five letters: ")
-
-  return guess
-
-def submitresults(mode, foundwords):
-  results = []
-  for i in range(mode):
-    if foundwords[i] == True:
-      results.append("OOOOO")
-      continue
-    result = input("Results for Game " + str(i + 1) + ": ")
-    while not isvalidresult(result):
-      if result == "help" or result == "h":
-        help()
-      result = input("Results should only be made up of X/I/O and be 5 characters long: ")
-
-    if result == "O":
-      result = "OOOOO"
-    elif result == "X":
-      result = "XXXXX"
-    results.append(result)
-  return results
-
 def showbestremainingwords(mode, words, foundwords, knownletters):
   for k in range(mode):
     if foundwords[k]:
@@ -76,7 +37,7 @@ def showbestremainingwords(mode, words, foundwords, knownletters):
       continue
 
     words[k] = [word.strip() for word in words[k]]
-    if len(words[k]) < 15:
+    if len(words[k]) < 13:
       print("Game " + str(k + 1) + " words remaining: " + str(words[k]))
       continue
 
@@ -109,8 +70,8 @@ def showbestremainingwords(mode, words, foundwords, knownletters):
           alreadyusedletters.add(letter)
           score += letterfrequencydict[letter]
 
-      # Fetch the 20 most valuable words to use to print to the user
-      if len(remainingwordswithscores) < 14:
+      # Fetch the 12 most valuable words to use to print to the user
+      if len(remainingwordswithscores) < 12:
         remainingwordswithscores.append([word, score])
       else:
         remainingwordswithscores.sort(key = lambda x: x[1], reverse = True)
@@ -123,6 +84,7 @@ def showbestremainingwords(mode, words, foundwords, knownletters):
   return
 
 def filterwords(words, knownletters, knownwrongplacements, inword, notinword, multiletters):
+  # filter first on correct letter position words
   for j in range(len(knownletters)):
     if knownletters[j] != '':
       words = [word for word in words if word[j] == knownletters[j]]
@@ -147,20 +109,35 @@ def filterwords(words, knownletters, knownwrongplacements, inword, notinword, mu
 
   return words
 
-def main():
-  # Reads in the list of 5 letter words available to us.
-  all_words_file = open('all_words.txt', 'r')
-  words = all_words_file.readlines()
-  all_words_file.close
+def submitresults(mode, foundwords):
+  results = []
+  for i in range(mode):
+    if foundwords[i] == True:
+      results.append("OOOOO")
+      continue
+    result = input("Results for Game " + str(i + 1) + ": ")
+    while not isvalidresult(result):
+      if result == "help" or result == "h":
+        help()
+      result = input("Results should only be made up of X/I/O and be 5 characters long: ")
 
-  # Strips the newline character
-  for word in words:
-    word = word.strip()
+    if result == "O":
+      result = "OOOOO"
+    elif result == "X":
+      result = "XXXXX"
+    results.append(result)
+  return results
 
-  # Prompts the user for their guess and the corresponding result
-  print("Welcome to Wordle Solver!")
-  mode = choosegamemode()
+def takeguess():
+  guess = input("Guess a five letter word: ")
+  while not isvalidguess(guess):
+    if guess == "help" or guess == "h":
+      help()
+    guess = input("Please guess a word with five letters: ")
 
+  return guess
+
+def playgame(words, mode):
   remainingwords = [words.copy() for _ in range(mode)]
   notinword = [set() for _ in range(mode)]
   inword = [set() for _ in range(mode)]
@@ -215,13 +192,11 @@ def main():
         if value >= 2 and key in yellowletters:
           multiletters[key] = value
 
-
       for letter in potentiallynotinword:
         if letter not in inword[i]:
           notinword[i].add(letter)
 
       # Filters down the list of words that can possibly remain to guess.
-      # filter first on correct letter position words
       remainingwords[i] = filterwords(remainingwords[i], knownletters[i], knownwrongplacements[i], inword[i], notinword[i], multiletters)
 
       tempvalidwordscount[i] = len(remainingwords[i])
@@ -232,6 +207,37 @@ def main():
     showbestremainingwords(mode, remainingwords, foundwords, knownletters)
 
   print("Congrats! You've won in " + str(numturns) + " turns.")
+
+def choosegamemode():
+  print("Welcome to Wordle Solver!")
+  print("What version of Wordle are you playing today?")
+  print("[1] Wordle\n[2] Duordle\n[4] Quordle\n[8] Octordle")
+  mode = input("Game mode: ")
+  while mode != "1" and mode != "2" and mode != "4" and mode != "8":
+    if mode == "help" or mode == "h":
+      help()
+    mode = input("Please select a valid game mode: ")
+
+  return int(mode)
+
+def readindictionaryofwords():
+  all_words_file = open('all_words.txt', 'r')
+  words = all_words_file.readlines()
+  all_words_file.close
+
+  for word in words:
+    word = word.strip()
+
+  return words
+
+def main():
+  # Reads in the list of 5 letter words available to us.
+  words = readindictionaryofwords()
+
+  # Prompts the user for their guess and the corresponding result
+  mode = choosegamemode()
+
+  playgame(words, mode)
 
 
 if __name__ == '__main__':

@@ -1,11 +1,10 @@
 Things to implement/do:
 
 1. Test cases
-2. Buff up README
-3. Dedicated HELP screens (type h to show)
-4. Button options for various things (h for help, f to finish, r to reset, d to debug mode)
-5. Clean up code more with helper methods etc
-6. If 2 yellows show up for a letter, or a green and yellow for same letter, then there's 2 of that letter.
-  Example: guess: belie. result: XIXXI. two e's in the final word.
-7. Make data structure class for all the game mode tracking data.
-8. Fix word count changes that get printed
+2. Buff up README with example playthrough description
+3. Button options for various things (h for help, f to finish, r to reset, d to debug mode)
+4. Make data structure class for all the game mode tracking data.
+5. Make game mode for sequence?
+6. Analyze and optimize algorithm runtime and memory
+7. Add output of potential words that'd optimize remaining words if all tried letters were grey
+7. Build a friendly frontend UI for this to be more usable
