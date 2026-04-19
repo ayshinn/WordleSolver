@@ -75,7 +75,7 @@ def showbestremainingwords(mode, words, foundwords, knownletters, unusedlettersw
       print(resulttextprefix + str(words[k]) + " COMPLETE")
       continue
 
-    if len(words[k]) < 13:
+    if len(words[k]) < 20:
       print(resulttextprefix + str(words[k]))
       continue
 

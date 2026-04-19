@@ -1,5 +1,7 @@
 Things to implement/do:
 
+ALSO add suggested second guess for try 2. Something with high overlap with all games in octordle
+
 1. Test cases
 2. Buff up README with example playthrough description
 3. Button options for various things (h for help, f to finish, r to reset, d to debug mode)
