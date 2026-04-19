@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wordle Solver</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Wordle Solver</h1>
+      <p class="subtitle">Enter your guess, click each letter to mark the result, then submit</p>
+    </header>
+
+    <main>
+      <div class="guess-input-area">
+        <input
+          type="text"
+          id="guessInput"
+          maxlength="5"
+          placeholder="Type a word..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        >
+      </div>
+
+      <div class="tile-row">
+        <div class="tile empty" id="tile-0" data-state="X" onclick="cycleTile(0)"></div>
+        <div class="tile empty" id="tile-1" data-state="X" onclick="cycleTile(1)"></div>
+        <div class="tile empty" id="tile-2" data-state="X" onclick="cycleTile(2)"></div>
+        <div class="tile empty" id="tile-3" data-state="X" onclick="cycleTile(3)"></div>
+        <div class="tile empty" id="tile-4" data-state="X" onclick="cycleTile(4)"></div>
+      </div>
+
+      <div class="tile-legend">
+        <span class="legend-item"><span class="legend-tile gray">X</span> Not in word</span>
+        <span class="legend-item"><span class="legend-tile yellow">I</span> Wrong place</span>
+        <span class="legend-item"><span class="legend-tile green">O</span> Correct</span>
+      </div>
+
+      <div class="controls">
+        <button id="submitBtn" onclick="submitGuess()" disabled>Submit Guess</button>
+        <button id="resetBtn" onclick="resetGame()">Reset</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div id="history" class="history"></div>
+
+      <div id="results" class="results hidden"></div>
+    </main>
+  </div>
+
+  <script src="js/solver.js"></script>
+</body>
+</html>
